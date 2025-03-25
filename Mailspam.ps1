@@ -16,5 +16,3 @@ $SMTPClient.Credentials = New-Object System.Net.NetworkCredential($Username, $Pa
 $MailMessage = New-Object Net.Mail.MailMessage($From, $To, $Subject, $Body)
 
 $SMTPClient.Send($MailMessage)
-
-Write-Output "E-Mail erfolgreich versendet!"
