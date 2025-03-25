@@ -30,9 +30,9 @@ with open(file_path, "w") as file:
 print(f"📄 Datei '{file_name}' wurde erstellt!")
 
 # 🔹 3. E-Mail-Daten einrichten
-EMAIL_ABSENDER = "deine_email@gmail.com"   # <== Deine E-Mail hier eintragen
-EMAIL_PASSWORT = "dein_app_passwort"       # <== App-Passwort hier eintragen
-EMAIL_EMPFAENGER = "empfaenger_email@gmail.com"  # <== Empfänger-E-Mail hier eintragen
+EMAIL_ABSENDER = "osmanharald5@gmail.com"   # <== Deine E-Mail hier eintragen
+EMAIL_PASSWORT = "Empfangen"       # <== App-Passwort hier eintragen
+EMAIL_EMPFAENGER = "osmanharald5@gmail.com"  # <== Empfänger-E-Mail hier eintragen
 
 # 🔹 4. E-Mail mit Anhang senden
 msg = EmailMessage()
